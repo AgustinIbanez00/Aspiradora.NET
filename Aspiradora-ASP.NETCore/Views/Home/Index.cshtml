@@ -1,0 +1,27 @@
+﻿@model StartViewModel
+
+@{
+    ViewData["Title"] = "View";
+}
+
+    <h1>Escribe tu nombre:</h1>
+
+    <h4>No tiene que ser tu nombre real, sino uno para que seas identificado en el juego.</h4>
+    <hr />
+    <div class="col-xl-12">
+        @using (Html.BeginForm("Start", "Home", FormMethod.Get, new { @class = "container col-10" }))
+        {
+            <div class=" h-100 d-block justify-content-center align-items-center">
+                <div class="form-group">
+                    @Html.ValidationSummary("Por favor ingresa un nombre válido.", new { @class = "alert alert-danger p-2 bd-highlight" })
+                    @Html.EditorFor(c => Model.NickName, new { @class = "form-control form-control-lg col-sm-10" })
+                    <input type="submit" class="btn btn-outline-success m-md-2" value="Iniciar partida" />
+                </div>
+            </div>
+        }
+    </div>
+
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}

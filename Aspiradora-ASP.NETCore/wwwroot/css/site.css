@@ -1,0 +1,320 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+a.navbar-brand {
+    white-space: normal;
+    text-align: center;
+    word-break: break-all;
+}
+
+/* Provide sufficient contrast against white background */
+a {
+    color: #0366d6;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.nav-pills .nav-link.active, .nav-pills .show > .nav-link {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    font-size: 14px;
+}
+
+@media (min-width: 768px) {
+    html {
+        font-size: 16px;
+    }
+}
+
+.border-top {
+    border-top: 1px solid #e5e5e5;
+}
+
+.border-bottom {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.box-shadow {
+    box-shadow: 0 .25rem .75rem rgba(0, 0, 0, .05);
+}
+
+button.accept-policy {
+    font-size: 1rem;
+    line-height: inherit;
+}
+
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+    position: relative;
+    min-height: 100%;
+}
+
+body {
+    /* Margin bottom by footer height */
+    margin-bottom: 60px;
+}
+
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    white-space: nowrap;
+    line-height: 60px; /* Vertically center the text there */
+}
+
+#button-ready {
+
+}
+
+
+#ChatSidebar {
+    z-index: 100;
+}
+
+#score-table
+{
+    vertical-align: top;
+
+}
+
+.mugre {
+  
+    margin: 5px;   
+    padding: unset;
+    width: 50px;
+    height: 50px;
+    vertical-align: middle;
+    text-align: center;
+    display: table-cell;
+}
+
+
+
+.nickname
+{
+    z-index: 1;
+    color: dodgerblue;
+}
+
+.env-td {
+    padding: unset;
+    width: 50px;
+    height: 50px;
+}
+
+.cleaner-div {
+    text-align: center;
+}
+
+#send-message {
+    bottom: 0;
+    width: 350px;
+    position: fixed;
+    margin-left: -350px;
+    transition: 0.5s;
+}   
+
+    .cleaner-div div {
+        position: relative;
+        font-size: 10pt;
+    }
+
+.cleaner {
+    transition: transform .5s;
+}
+
+.rot-0 {
+ 
+    transform: rotate(0deg);
+}
+
+.rot-1 {
+   
+    transform: rotate(90deg);
+}
+
+.rot-2 {
+    transform: rotate(180deg);
+}
+
+.rot-3 {
+    transform: rotate(-90deg);
+}
+
+.sidebar {
+    height: 100%;
+    width: 0;
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: #111;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding-top: 60px;
+}
+
+    .sidebar div {
+        text-decoration: none;
+        font-size: 15px;
+        color: #818181;
+        display: block;
+        transition: 0.3s;
+    }
+
+
+
+        .sidebar a:hover {
+            color: #f1f1f1;
+        }
+
+    .sidebar .closebtn {
+        position: absolute;
+        top: 0;
+        right: 25px;
+        font-size: 36px;
+        margin-left: 50px;
+    }
+
+.openbtn {
+    font-size: 20px;
+    cursor: pointer;
+    background-color: #111;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+}
+
+.openbtn:hover {
+    background-color: #444;
+}
+
+#main {
+    margin-left: 0px;
+    transition: margin-left .5s;
+    padding: 16px;
+}
+
+/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+    .sidebar {
+        padding-top: 15px;
+    }
+
+    .sidebar a {
+        font-size: 18px;
+    }
+}
+
+/*
+.rot-0 {
+    -webkit-animation: spinRot0 0.5s linear normal;
+    -moz-animation: spinRot0 0.5s linear normal;
+    animation: spinRot0 0.5s linear normal;
+}
+
+.rot-1 {
+    -webkit-animation: spinRot1 0.5s linear normal;
+    -moz-animation: spinRot1 0.5s linear normal;
+    animation: spinRot1 0.5s linear normal;
+}
+
+.rot-2 {
+    -webkit-animation: spinRot2 0.5s linear normal;
+    -moz-animation: spinRot2 0.5s linear normal;
+    animation: spinRot2 0.5s linear normal;
+}
+
+.rot-3 {
+    -webkit-animation: spinRot3 0.5s linear normal;
+    -moz-animation: spinRot3 0.5s linear normal;
+    animation: spinRot3 0.5s linear normal;
+}
+
+@-moz-keyframes spinRot0 {
+    100% {
+        -moz-transform: rotate(0eg);
+    }
+}
+
+@-webkit-keyframes spinRot0 {
+    100% {
+        -webkit-transform: rotate(0deg);
+    }
+}
+
+@keyframes spinRot0 {
+    100% {
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+}
+
+@-moz-keyframes spinRot1 {
+    100% {
+        -moz-transform: rotate(90deg);
+    }
+}
+
+@-webkit-keyframes spinRot1 {
+    100% {
+        -webkit-transform: rotate(90deg);
+    }
+}
+
+@keyframes spinRot1 {
+    100% {
+        -webkit-transform: rotate(90deg);
+        transform: rotate(90deg);
+    }
+}
+
+@-moz-keyframes spinRot2 {
+    100% {
+        -moz-transform: rotate(180deg);
+    }
+}
+
+@-webkit-keyframes spinRot2 {
+    100% {
+        -webkit-transform: rotate(180deg);
+    }
+}
+
+@keyframes spinRot2 {
+    100% {
+        -webkit-transform: rotate(180deg);
+        transform: rotate(180deg);
+    }
+}
+
+@-moz-keyframes spinRot3 {
+    100% {
+        -moz-transform: rotate(-90deg);
+    }
+}
+
+@-webkit-keyframes spinRot3 {
+    100% {
+        -webkit-transform: rotate(-90deg);
+    }
+}
+
+@keyframes spinRot3 {
+    100% {
+        -webkit-transform: rotate(-90deg);
+        transform: rotate(-90deg);
+    }
+}
+    */
