@@ -2,6 +2,8 @@
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
 name: Build and deploy ASP.Net Core app to Azure Web App - aspiradora
+env:
+  DOTNET_ROOT: Aspiradora-ASP.NETCore/
 
 on:
   push:
