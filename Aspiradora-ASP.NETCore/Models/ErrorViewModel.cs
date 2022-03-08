@@ -1,6 +1,6 @@
 using System;
 
-namespace Aspiradora_ASP.NETCore.Models
+namespace Aspiradora.Web.Models
 {
     public class ErrorViewModel
     {

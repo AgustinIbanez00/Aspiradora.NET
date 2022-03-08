@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace Aspiradora_ASP.NETCore.Models
+namespace Aspiradora.Web.Models
 {
     public class StartViewModel
     {

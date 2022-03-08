@@ -5,11 +5,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Timers;
-using Aspiradora_ASP.NETCore.Controllers;
+using Aspiradora.Web.Controllers;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
-namespace Aspiradora_ASP.NETCore.Models
+namespace Aspiradora.Web.Models
 {
     public class CleanerModel
     {
@@ -63,7 +63,7 @@ namespace Aspiradora_ASP.NETCore.Models
                 {
                     Cleaner cleaner = new Cleaner(connection_id) { NickName = nick, ColumnIndex = randCol, RowIndex = randRow, Controllable = DEFAULT_CONTROLLABLE, MaxColumns = COLUMNS, MaxRows = ROWS, Rotation = Rotation.NORTH, Spectating = Started };
                     Cleaners.Add(cleaner);
-                    AspiradoraController._hubContext.Clients.All.SendAsync("ReceiveCleaner", JsonConvert.SerializeObject(cleaner));
+                    AspiradoraHub._hubContext.Clients.All.SendAsync("ReceiveCleaner", JsonConvert.SerializeObject(cleaner));
                     Debug.WriteLine("Aspiradora generada.");
                 }
                 else GenerateCleaner(nick, connection_id, recursive_index++);

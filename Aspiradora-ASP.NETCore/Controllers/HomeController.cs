@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Aspiradora_ASP.NETCore.Models;
-using Newtonsoft.Json;
+using Aspiradora.Web.Models;
 
-namespace Aspiradora_ASP.NETCore.Controllers
+namespace Aspiradora.Web.Controllers
 {
     public class HomeController : Controller
     {
@@ -20,6 +15,7 @@ namespace Aspiradora_ASP.NETCore.Controllers
             _logger = logger;
         }
 
+        [HttpGet]
         public IActionResult Index()
         {
             return View("Start");

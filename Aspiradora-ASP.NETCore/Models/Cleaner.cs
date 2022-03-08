@@ -1,14 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Runtime.InteropServices.WindowsRuntime;
-using System.Threading.Tasks;
-using Aspiradora_ASP.NETCore.Controllers;
+using Aspiradora.Web.Controllers;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
 
-namespace Aspiradora_ASP.NETCore.Models
+namespace Aspiradora.Web.Models
 {
     public enum MovementDirection
     {
@@ -48,7 +44,7 @@ namespace Aspiradora_ASP.NETCore.Models
             set
             {
                 score = value;
-                AspiradoraController._hubContext.Clients.All.SendAsync("ReceiveScore", Id, score);
+                AspiradoraHub._hubContext.Clients.All.SendAsync("ReceiveScore", Id, score);
             }
         }
         internal int? rowIndex;
@@ -60,7 +56,7 @@ namespace Aspiradora_ASP.NETCore.Models
                 rowIndex = value;
                 if (rowIndex.HasValue)
                 {
-                    AspiradoraController._hubContext.Clients.All.SendAsync("CleanerRowChanged", Id, rowIndex);
+                    AspiradoraHub._hubContext.Clients.All.SendAsync("CleanerRowChanged", Id, rowIndex);
                     Debug.WriteLine("Aspiradora " + NickName + " (" + Id.ToString() + ") se ha movido (RowIndex: " + rowIndex + ");");
                 }
             }
@@ -74,7 +70,7 @@ namespace Aspiradora_ASP.NETCore.Models
                 columnIndex = value;
                 if (columnIndex.HasValue)
                 {
-                    AspiradoraController._hubContext.Clients.All.SendAsync("CleanerColumnChanged", Id, columnIndex);
+                    AspiradoraHub._hubContext.Clients.All.SendAsync("CleanerColumnChanged", Id, columnIndex);
                     Debug.WriteLine("Aspiradora " + NickName + " (" + Id.ToString() + ") se ha movido (ColumnIndex: " + columnIndex + ");");
                 }
             }
@@ -92,7 +88,7 @@ namespace Aspiradora_ASP.NETCore.Models
                 if(value != rotation)
                 {
                     rotation = value;
-                    AspiradoraController._hubContext.Clients.All.SendAsync("ReceiveRotation", Id, rotation);
+                    AspiradoraHub._hubContext.Clients.All.SendAsync("ReceiveRotation", Id, rotation);
                     Debug.WriteLine("Aspiradora " + NickName + " (" + Id.ToString() + ") ha cambiado su rotación. (Rotation: " + rotation + ");");
                 }
             }
@@ -146,7 +142,7 @@ namespace Aspiradora_ASP.NETCore.Models
                     if(CleanerModel.Instance.CountDirt() == 0)
                     {
                         Cleaner winner = CleanerModel.Instance.Cleaners.OrderByDescending(c => c.Score).FirstOrDefault();
-                        AspiradoraController._hubContext.Clients.All.SendAsync("ReceiveWinner", winner.Id);
+                        AspiradoraHub._hubContext.Clients.All.SendAsync("ReceiveWinner", winner.Id);
                     }
                 }
             }

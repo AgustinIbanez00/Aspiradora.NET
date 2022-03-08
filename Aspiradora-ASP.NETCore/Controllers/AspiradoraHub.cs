@@ -1,24 +1,20 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Threading;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Aspiradora_ASP.NETCore.Models;
-using Microsoft.AspNet.SignalR.Hubs;
+using Aspiradora.Web.Models;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
 
-namespace Aspiradora_ASP.NETCore.Controllers
+namespace Aspiradora.Web.Controllers
 {
-    [HubName("AspiradoraHub")]
-    public class AspiradoraController : Hub
+    public class AspiradoraHub : Hub
     {
-        public static IHubContext<AspiradoraController> _hubContext;
+        public static IHubContext<AspiradoraHub> _hubContext;
 
         private static readonly System.Timers.Timer _timer = new System.Timers.Timer();
 
-        public AspiradoraController(IHubContext<AspiradoraController> hubContext)
+        public AspiradoraHub(IHubContext<AspiradoraHub> hubContext)
         {
             _hubContext = hubContext;
         }
@@ -60,8 +56,8 @@ namespace Aspiradora_ASP.NETCore.Controllers
                     {
                         CleanerModel.Instance.GenerateCleaner(Context.ConnectionId, NickName);
 
-                        string list = JsonConvert.SerializeObject(CleanerModel.Instance.List);
-                        string cleaners = JsonConvert.SerializeObject(CleanerModel.Instance.Cleaners);
+                        string list = JsonSerializer.Serialize(CleanerModel.Instance.List);
+                        string cleaners = JsonSerializer.Serialize(CleanerModel.Instance.Cleaners);
                         await Clients.Caller.SendAsync("ReceiveStart", list, cleaners);
                         await Clients.All.SendAsync("ReceiveMessage", new { nickname = NickName, date = DateTime.Now.ToShortTimeString(), text = "se unió a la partida.", type = 1 });
                     }
@@ -111,7 +107,7 @@ namespace Aspiradora_ASP.NETCore.Controllers
 
         public async Task SendList()
         {
-            string list = JsonConvert.SerializeObject(CleanerModel.Instance.List);
+            string list = JsonSerializer.Serialize(CleanerModel.Instance.List);
             Debug.WriteLine("Lista enviada.");
             await Clients.All.SendAsync("ReceiveList", list);
         }
