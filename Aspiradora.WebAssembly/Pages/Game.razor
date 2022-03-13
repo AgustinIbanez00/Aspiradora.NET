@@ -1,0 +1,409 @@
+﻿@page "/play"
+@using Aspiradora.Web.Models
+@using Microsoft.AspNetCore.SignalR.Client
+@using Microsoft.Extensions.Configuration
+@using System.Text.Json
+@inject IConfiguration Configuration
+@inject NotificationService NotificationService
+@inject DialogService DialogService
+
+@if (hubConnection != null)
+{
+    <div class="container-fluid d-flex">
+        <div class="row">
+            <div class="col">
+                <RadzenBadge BadgeStyle="GetBadgeStyleByHubState(hubConnection.State)" IsPill="true" Text="@hubConnection.State.ToString()" />
+            </div>
+        </div>
+    </div>
+
+}
+
+@if (IsConnected && _sala)
+{
+    <RadzenCard>
+        <div class="row">
+            <RadzenFieldset Text="Invitar a tus amigos">
+                <div class="row">
+                    <div class="col-md-4 align-items-center d-flex">
+                        <RadzenLabel Text="Código de la sala" />
+                    </div>
+                    <div class="col-md-8">
+                        <RadzenLabel Text="@_sessionCode"></RadzenLabel>
+                    </div>
+                </div>
+            </RadzenFieldset>
+        </div>
+    </RadzenCard>
+}
+
+@if (IsConnected)
+{
+    if (_places == null)
+    {
+        <RadzenCard>
+            <div class="row m-3">
+                <div class="col-6">
+                    <RadzenTextBox @bind-Value="@_nickName" Placeholder="Ingresa tu nombre de usuario" style="width: 100%;" />
+                </div>
+            </div>
+            <div class="row m-3">
+                <div class="col-md-4">
+                    <RadzenButton Click=@(args => CrearSala()) Disabled="@(string.IsNullOrEmpty(_nickName))" Text="Crear nueva partida" ButtonStyle="ButtonStyle.Success" />
+                </div>
+                <div class="col-md-6">
+                    <RadzenTextBox @bind-Value="@_sessionCode" Placeholder="Ingresa un código" style="width: 100%;" />
+                </div>
+                <div class="col-md-2">
+                    <RadzenButton Click=@(args => Unirse()) Visible="@(!string.IsNullOrEmpty(_sessionCode))" Text="Unirme" ButtonStyle="ButtonStyle.Success" />
+                </div>
+            </div>
+        </RadzenCard>
+    }
+    else
+    {
+        <div class="row">
+            <div class="col-8">
+                <div class="p-2 container-fluid" tabindex="0" @onkeydown="KeyboardEventHandler" style="background-image: url('images/bg_wood_light.jpg'); background-position: center; background-size: contain">
+                    @for (int rowIndex = 0; rowIndex < _places.Count; rowIndex++)
+                    {
+                        <div class="row">
+                            @for (int columnIndex = 0; columnIndex < _places[rowIndex].Places.Count; columnIndex++)
+                            {
+                                <div class="col">
+                                    @if (!_cleaners.Any(p => p.RowIndex == rowIndex && p.ColumnIndex == columnIndex))
+                                    {
+                                        @if (_places[rowIndex].Places[columnIndex].State == PlaceState.CLEAN)
+                                        {
+                                            <img width="50" src="data:image/gif;base64,R0lGODlhAQABAAAAACwAAAAAAQABAAA=" height="50">
+                                        }
+                                        else
+                                        {
+                                            <img width="50" src="images/mugre.png" height="50">
+                                        }
+                                    }
+                                    else
+                                    {
+                                        var cleaner = _cleaners.Find(p => p.RowIndex == rowIndex && p.ColumnIndex == columnIndex);
+                                        <span style="z-index: 1" class="position-absolute">
+                                            <RadzenBadge BadgeStyle="BadgeStyle.Light" IsPill="true" Text="@cleaner.NickName" />
+                                            <RadzenBadge BadgeStyle="BadgeStyle.Info" IsPill="true" Text="@cleaner.Score.ToString()" />
+                                        </span>
+                                        <img width="50" src="images/cleaner.png" class="@("rot-" + (int)cleaner?.Rotation) cleaner" height="50">
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col-md-4">
+                <RadzenCard>
+                    <h3>Chat de la sala</h3>
+                    <RadzenListBox @bind-Value=@value Data=@messages TextProperty="Text" ValueProperty="Date"
+                           Style="height:200px" Class="w-100">
+                        <Template>
+                            <strong> @((context as MessageHub).NickName):</strong> @((context as MessageHub).Text)
+                        </Template>
+                    </RadzenListBox>
+                    <div class="container-fluid mt-3 w-100">
+                        <div class="row">
+                            <div class="col-10">
+                                <RadzenTextBox @bind-Value=@messageInput Placeholder="Escribe un mensaje.." @onkeypress=@(async (e) => {
+                                       if(e.Code == "Enter" || e.Code == "NumpadEnter")
+                                       await SendMessage();
+                                       }) class="w-100"></RadzenTextBox>
+                            </div>
+                            <div class="col-2">
+                                <RadzenButton Icon="send" ButtonStyle="ButtonStyle.Success" Click=@(args => SendMessage()) />
+                            </div>
+                        </div>
+                    </div>
+                </RadzenCard>
+            </div>
+        </div>
+    }
+}
+else
+{
+    <p>No estás conectado al servidor</p>
+}
+
+
+
+@code {
+
+    private class MessageHub
+    {
+        public int Id { get; set; }
+        public string Date { get; set; }
+        public string NickName { get; set; }
+        public string Text { get; set; }
+    }
+
+    string value = "ALFKI";
+
+    private HubConnection hubConnection;
+    private List<MessageHub> messages = new List<MessageHub>();
+    private string userInput;
+    private string messageInput;
+
+    private List<Cleaner> _cleaners = null;
+    private List<PlaceRow> _places = null;
+
+    private string _sessionCode = "";
+    private string _nickName = "";
+
+    private bool _sala = false;
+
+
+    private async Task SendMessage()
+    {
+        if (string.IsNullOrEmpty(messageInput))
+            return;
+
+        await hubConnection?.InvokeAsync("SendMessage", messageInput);
+
+        messageInput = "";
+    }
+
+    private async Task Unirse()
+    {
+        if (!string.IsNullOrEmpty(_nickName))
+        {
+            await hubConnection.InvokeAsync("JoinGame", _sessionCode, _nickName);
+        }
+        else ShowMessage(NotificationSeverity.Error, "Error", "Debes tener un nombre");
+    }
+
+    private async Task KeyboardEventHandler(KeyboardEventArgs args)
+    {
+        if (args.Code == "KeyW" || args.Code == "ArrowUp")
+        {
+            await hubConnection.InvokeAsync("Move", MovementDirection.UP);
+        }
+        else if (args.Code == "KeyD" || args.Code == "ArrowRight")
+        {
+            await hubConnection.InvokeAsync("Move", MovementDirection.RIGHT);
+        }
+        else if (args.Code == "KeyS" || args.Code == "ArrowDown")
+        {
+            await hubConnection.InvokeAsync("Move", MovementDirection.DOWN);
+        }
+        else if (args.Code == "KeyA" || args.Code == "ArrowLeft")
+        {
+            await hubConnection.InvokeAsync("Move", MovementDirection.LEFT);
+        }
+        else if (args.Code == "Space")
+        {
+            await hubConnection.InvokeAsync("Clear");
+        }
+    }
+
+    private BadgeStyle GetBadgeStyleByHubState(HubConnectionState hubConnectionState)
+    {
+        return hubConnectionState switch
+        {
+            HubConnectionState.Connected => BadgeStyle.Success,
+            HubConnectionState.Disconnected => BadgeStyle.Danger,
+            HubConnectionState.Reconnecting => BadgeStyle.Warning,
+            HubConnectionState.Connecting => BadgeStyle.Warning,
+            _ => BadgeStyle.Info
+        };
+    }
+
+    private async Task CrearSala()
+    {
+        if (!string.IsNullOrEmpty(_nickName))
+        {
+            await hubConnection.InvokeAsync("CreateSession", _nickName);
+        }
+        else ShowMessage(NotificationSeverity.Error, "Error", "Debes tener un nombre");
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        string hubUrl = Configuration["HUB_URL"];
+
+        Console.WriteLine("URL: " + hubUrl == null ? "no tiene" : hubUrl);
+
+        if (!string.IsNullOrEmpty(hubUrl))
+        {
+            hubConnection = new HubConnectionBuilder()
+                .WithUrl(hubUrl)
+                .ConfigureLogging(logging =>
+                {
+                    logging.SetMinimumLevel(LogLevel.Debug);
+                })
+                .AddJsonProtocol()
+                .Build();
+
+            hubConnection.On<string, string, string, int>(nameof(IAspiradoraClient.ReceiveMessageAsync), (nickname, date, text, type) =>
+            {
+                messages.Add(new MessageHub()
+                    {
+                        NickName = nickname,
+                        Text = text,
+                        Date = date
+                    });
+                //ShowMessage(NotificationSeverity.Success, nickname, text);
+                StateHasChanged();
+            });
+
+            hubConnection.On<string>(nameof(IAspiradoraClient.ReceiveCleanerAsync), (cleaner) =>
+            {
+                ShowMessage(NotificationSeverity.Warning, "DEBUG:", "Jugador recibido.");
+                _cleaners ??= new List<Cleaner>();
+
+                Console.WriteLine("Jugador: " + cleaner);
+
+                _cleaners.Add(JsonSerializer.Deserialize<Cleaner>(cleaner));
+                StateHasChanged();
+            });
+
+            hubConnection.On<string, string, string>(nameof(IAspiradoraClient.ReceiveStartAsync), (sessionId, places, cleaners) =>
+            {
+                ShowMessage(NotificationSeverity.Warning, "DEBUG:", "Inicio recibido.");
+
+                _places = JsonSerializer.Deserialize<List<PlaceRow>>(places);
+                _cleaners = JsonSerializer.Deserialize<List<Cleaner>>(cleaners);
+
+                _sessionCode = sessionId;
+
+                _sala = true;
+                StateHasChanged();
+            });
+
+            hubConnection.On<string, Rotation>(nameof(IAspiradoraClient.ReceiveRotationAsync), (id, rotation) =>
+            {
+                var cleaner = _cleaners?.Find(c => c.Id == id);
+
+                if (cleaner == null)
+                    return;
+
+                cleaner.Rotation = rotation;
+
+                StateHasChanged();
+            });
+
+            hubConnection.On<string>(nameof(IAspiradoraClient.ReceiveListAsync), (places) =>
+            {
+                ShowMessage(NotificationSeverity.Warning, "DEBUG:", "Lugares recibidos.");
+
+                _places ??= new List<PlaceRow>();
+                _places = JsonSerializer.Deserialize<List<PlaceRow>>(places);
+                StateHasChanged();
+            });
+
+            hubConnection.On<int, int, PlaceState>(nameof(IAspiradoraClient.ReceiveCellChangedAsync), (row, column, state) =>
+            {
+                try
+                {
+                    _places[row].Places[column].State = state;
+                    StateHasChanged();
+                }
+                catch (NullReferenceException)
+                {
+
+                }
+                catch (IndexOutOfRangeException)
+                {
+
+                }
+            });
+
+            hubConnection.On<string, int>(nameof(IAspiradoraClient.CleanerRowChangedAsync), (id, rowIndex) =>
+            {
+                var cleaner = _cleaners?.Find(c => c.Id == id);
+
+                if (cleaner == null)
+                    return;
+
+                cleaner.RowIndex = rowIndex;
+
+                StateHasChanged();
+            });
+
+            hubConnection.On<string, int>(nameof(IAspiradoraClient.CleanerColumnChangedAsync), (id, columnIndex) =>
+            {
+                var cleaner = _cleaners?.Find(c => c.Id == id);
+
+                if (cleaner == null)
+                    return;
+
+                cleaner.ColumnIndex = columnIndex;
+
+                StateHasChanged();
+            });
+
+            hubConnection.On<string>(nameof(IAspiradoraClient.ReceiveDisconnectAsync), (id) =>
+            {
+                ShowMessage(NotificationSeverity.Warning, "DEBUG:", "Desconexión recibido.");
+
+                var cleaner = _cleaners?.Find(c => c.Id == id);
+
+                if (cleaner == null)
+                    return;
+
+                _cleaners.Remove(cleaner);
+
+                StateHasChanged();
+            });
+
+            hubConnection.On<string>(nameof(IAspiradoraClient.ReceiveErrorAsync), (message) =>
+            {
+                ShowMessage(NotificationSeverity.Error, "ERROR", message);
+                StateHasChanged();
+            });
+
+            hubConnection.On<string>(nameof(IAspiradoraClient.ReceiveWinnerAsync), async (id) =>
+            {
+                var cleaner = _cleaners?.Find(c => c.Id == id);
+
+                if (cleaner == null)
+                    return;
+
+                var result = await DialogService.OpenAsync("Juego terminado", ds =>
+    @<div class="bg-light">
+        <h1 class="text-success display-2 text-center">¡@cleaner.NickName ha ganado!</h1>
+        <h2 class="text-secondary text-cente text-center">Puntuación: @cleaner.Score</h2>
+        <div class="row text-center">
+            <div class="col">
+                <RadzenButton Text="Aceptar" Click="() => ds.Close(true)" />
+            </div>
+        </div>
+    </div>
+    );
+                StateHasChanged();
+            });
+
+            hubConnection.On<string, int>(nameof(IAspiradoraClient.ReceiveScoreAsync), (id, score) =>
+            {
+                var cleaner = _cleaners?.Find(c => c.Id == id);
+
+                if (cleaner == null)
+                    return;
+
+                cleaner.Score = score;
+
+                StateHasChanged();
+            });
+
+
+            await hubConnection.StartAsync().ContinueWith((o) =>
+            {
+                Console.WriteLine("Conectado " + hubConnection.State.ToString());
+
+            });
+        }
+    }
+
+    private void ShowMessage(NotificationSeverity type, string title, string detail)
+    {
+        NotificationService.Notify(new NotificationMessage { Severity = type, Summary = title, Detail = detail, Duration = 4000 });
+    }
+
+
+    public bool IsConnected =>
+        hubConnection?.State == HubConnectionState.Connected;
+}

@@ -1,0 +1,395 @@
+﻿
+    <div id="app" class="container">
+
+        <div id="main">
+            <button class="openbtn" onclick="openNav()">☰ Sala <span class="badge badge-primary" v-if="unread_messages > 0" v-html="unread_messages"></span></button>
+        </div>
+
+        <div class="modal fade" id="WinnerModalCenter" tabindex="-1" role="dialog" aria-labelledby="WinnerModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div v-if="(connection && winner)" class="modal-header" v-bind:class="{ 'bg-success' : winner == connection, 'bg-danger' : winner != connection } ">
+                        <h5 class="modal-title" id="WinnerModalLongTitle" v-if="(connection && winner)" v-html="cleaners.find(c => c.Id == connection).NickName + ' ganó la partida.'">Partida terminada.</h5>
+                    </div>
+                    <div class="modal-body" >
+                        <h1 class="text-center" v-if="(connection && winner) && winner == connection">Ganaste la partida</h1>
+                        <h1 class="text-center" v-else >Has perdido</h1>
+                    </div>
+                    <div  class="modal-footer">
+ 
+
+                        <button id="play-again" type="button" class="btn" v-if="(connection && winner)" v-bind:class="{ 'btn-outline-success' : winner == connection, 'btn-outline-danger' : winner != connection } " >Volver a jugar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="modal fade" id="StartModalCenter" tabindex="-1" role="dialog" aria-labelledby="StartModalCenterTitle" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header bg-dark border-light">
+                        <h5 class="modal-title text-light" id="StartModalLongTitle">Escribe tu nombre:</h5>
+                    </div>
+                    <div class="modal-body bg-dark border-light">
+                        <transition name="fade">
+                            <div v-if="modal_message" v-html="modal_message" class="alert alert-danger" role="alert"></div>
+                        </transition>
+                        <div class="form-group">
+                            <label class="text-light">Este nombre será usado para identificarte con otros jugadores:</label>
+                            <input id="input-nickname" class="form-control" type="text" placeholder="Ingresa tu nombre aquí..." />
+                        </div>
+
+                    </div>
+                    <div class="modal-footer bg-dark border-light">
+                        <button id="button-start" type="button" class="btn btn-outline-light">Comenzar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+        <div id="ChatSidebar" class="sidebar pb-3">
+            <div class="card-header">
+                <h5>Chat</h5>
+            </div>
+            <div class="list-group m-2 overflow-auto mb-5">
+                <div v-for="message in messages" class="list-group-item  flex-column align-items-start" v-bind:class="{ 'list-group-item-secondary': message.type == 0, 'list-group-item-primary' : message.type == 1, 'list-group-item-danger' : message.type == 2 }">
+                    <div class="d-flex w-100 justify-content-between">
+                        <p class="text-dark" v-if="message.type != 0" v-html="message.nickname + ' ' + message.text"></p>
+                        <h5 v-if="message.type == 0" class="mb-1" v-html="message.nickname" v-bind:class="{ 'text-primary': cleaners.some(c => c.Id == connection && c.NickName == message.nickname) }"></h5>
+                        <small v-html="message.date"></small>
+                    </div>
+                    <p class="mb-1 text-dark" v-if="message.type == 0" v-html=" message.text"></p>
+                </div>
+            </div>
+            <div id="send-message" class="bg-dark footer col-auto">
+                <div class="form-inline">
+                    <input id="chat-input" class="form-control w-75" type="text" placeholder="Escribe un mensaje..." />
+                    <button id="send-button" class="btn btn-outline-primary">Enviar</button>
+                </div>
+            </div>
+        </div>
+
+
+
+        <div class="justify-content-center align-items-center d-inline">
+            <div class="d-inline-block w-75 border border-dark mb-2">
+
+                <div v-if="places" v-for="placeRow in places" class="row h-100 justify-content-center align-items-center">
+
+                    <template class="env-td" v-for="place in placeRow.Places">
+                        <img class="mugre d-inline-block" v-if="place.State == 1 && !cleaners.some(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row)" src="~/images/mugre.png" />
+                        <div class="cleaner-div" v-else-if="cleaners.some(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row)">
+                            <div class="nickname d-inline-block position-absolute" v-if="cleaners.some(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row)" v-html="'<b>' + cleaners[cleaners.findIndex(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row)].NickName + '</b>'"></div>
+                            <img class="mugre cleaner d-inline-block" v-if="cleaners.some(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row)" v-bind:id="cleaners[cleaners.findIndex(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row)].Id" v-bind:class="{ 'rot-0': cleaners.some(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row && c.Rotation == 0), 'rot-1': cleaners.some(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row && c.Rotation == 1), 'rot-2': cleaners.some(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row && c.Rotation == 2), 'rot-3' : cleaners.some(c => c.ColumnIndex == place.Column && c.RowIndex == place.Row && c.Rotation == 3) }" src="~/images/cleaner.png" />
+                        </div>
+                        <div class="mugre" v-else=""></div>
+                    </template>
+                </div>
+            </div>
+            <div class="d-inline-block position-absolute ml-3 w-25">
+                <table id="score-table" class="table table-sm table-dark">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Puntaje</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template v-for="cleaner in cleaners.sort((a, b) => a.Score - b.Score)">
+                            <tr>
+                                <td v-html="cleaner.NickName"></td>
+                                <td v-html="cleaner.Score"></td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+<script type="text/javascript">
+    "use strict";
+
+    var connection = new signalR.HubConnectionBuilder().withUrl("https://aspiradora.azurewebsites.net//Aspiradora").build();
+
+    var app = new Vue({
+        el: "#app",
+        data: {
+            places: [],
+            cleaners: [],
+            messages: [],
+            unread_messages: 0,
+            modal_message: null,
+            winner: null,
+            connection : null
+        }
+    });
+
+
+    connection.on("ReceiveCleaner", function (cleaner) {
+        if (app.cleaners) {
+            let cleanerObject = JSON.parse(cleaner);
+            app.cleaners.push(cleanerObject);
+        }
+
+    });
+
+    connection.on("ReceiveStart", function (list, cleaners) {
+        app.cleaners = [];
+        app.places = [];
+
+        console.log("Inicio recibido.");
+        var listObject = JSON.parse(list);
+        var cleanersObject = JSON.parse(cleaners);
+
+        app.places = listObject;
+        app.cleaners = cleanersObject;
+    });
+
+    connection.on("ReceiveRotation", function (cleaner_id, rotation) {
+        if (app.cleaners) {
+            let cleaner = app.cleaners.find(c => c.Id == cleaner_id);
+            if (cleaner) {
+                cleaner.Rotation = rotation;
+            }
+        }
+    })
+
+    connection.on("ReceiveList", function (list) {
+        console.log("Lista recibida. ");
+        var listObject = JSON.parse(list);
+
+        app.places = listObject;
+    })
+
+    connection.on("ReceiveCellChanged", function (row, column, state) {
+        if (app.places) {
+            app.places[row].Places[column].State = state;
+        }
+    })
+
+    connection.on("CleanerRowChanged", function (cleaner_id, rowIndex) {
+        if (app.cleaners) {
+            let cleaner = app.cleaners.find(c => c.Id == cleaner_id);
+            if (cleaner) {
+                cleaner.RowIndex = rowIndex;
+
+                myCleaner = app.cleaners.find(c => c.Id == connection.connectionId);
+                if (myCleaner) {
+                    $('body').scrollTo('#' + myCleaner.Id);
+                }
+
+            }
+        }
+    })
+
+    connection.on("CleanerColumnChanged", function (cleaner_id, columnIndex) {
+        if (app.cleaners) {
+            let cleaner = app.cleaners.find(c => c.Id == cleaner_id);
+            if (cleaner) {
+                cleaner.ColumnIndex = columnIndex;
+
+                myCleaner = app.cleaners.find(c => c.Id == connection.connectionId);
+                if (myCleaner) {
+                    $('body').scrollTo('#' + myCleaner.Id);
+                }
+            }
+        }
+    })
+
+    connection.on("ReceiveDisconnect", function (cleaner_id) {
+        if (app.cleaners) {
+            let cleaner = app.cleaners.find(c => c.Id == cleaner_id);
+            if (cleaner) {
+                app.cleaners.splice(app.cleaners.findIndex(c => c.Id == cleaner_id), 1);
+            }
+        }
+    })
+
+    connection.on("ReceiveMessage", function (message) {
+        if (app.messages) {
+            app.messages.push(message);
+            $("#chat-input").val("");
+            if (!sidebarStatus) app.unread_messages++;
+        }
+    })
+
+    connection.on("ReceiveError", function (error) {
+        console.error(error);
+        sendErrorMessage(error);
+    })
+
+    connection.on("ReceiveScore", function (cleaner_id, score) {
+        if (app.cleaners) {
+            let cleaner = app.cleaners.find(c => c.Id == cleaner_id);
+            if (cleaner) {
+                cleaner.Score = score;
+            }
+        }
+    })
+
+    connection.on("ReceiveWinner", function (cleaner_id) {
+        if (app.cleaners) {
+            let cleaner = app.cleaners.find(c => c.Id == cleaner_id);
+            if (cleaner) {
+                showWinner(cleaner_id, cleaner.NickName);
+            }
+        }
+    })
+
+    $(document).on("keydown", function (event) {
+        if ($(':input').is(':focus') == false) {
+            //NORTH
+            if (event.keyCode == 87 || event.keyCode == 38) {
+                connection.invoke("Move", 0).catch(function (err) {
+                    return console.error(err.toString());
+                });
+            }
+            //RIGHT
+            else if (event.keyCode == 68 || event.keyCode == 39) {
+                connection.invoke("Move", 1).catch(function (err) {
+                    return console.error(err.toString());
+                });
+            }
+            //SOUTH
+            else if (event.keyCode == 83 || event.keyCode == 40) {
+                connection.invoke("Move", 2).catch(function (err) {
+                    return console.error(err.toString());
+                });
+            }
+            //LEFT
+            else if (event.keyCode == 65 || event.keyCode == 37) {
+                connection.invoke("Move", 3).catch(function (err) {
+                    return console.error(err.toString());
+                });
+            }
+            else if (event.keyCode == 32) {
+                connection.invoke("Clear").catch(function (err) {
+                    return console.error(err.toString());
+                });
+            }
+            event.preventDefault();
+            return false;
+        }
+    })
+
+    $(document).on("keypress", function (event) {
+        if ($(':input').is(':focus') == false) {
+            if (event.keyCode == 32) return false;
+            event.preventDefault();
+            return false;
+        }
+    })
+
+    $(document).on("keydown", function (event) {
+        if ($(':input').is(':focus') == false) {
+            if (event.keyCode == 32) return false;
+            event.preventDefault();
+            return false;
+        }
+    })
+
+
+
+    $("#button-start").on("click", function () {
+        start();
+
+    });
+
+    $("#input-nickname").on("keyup", function (event) {
+        if (event.keyCode == 13) {
+            start();
+        }
+    })
+
+    $("#play-again").on("click", function () {
+        $("#WinnerModalCenter").modal("hide");
+        connection.invoke("PlayAgain").catch(function (err) {
+            return console.error(err.toString());
+        });
+    });
+
+
+    function start() {
+        if ($("#input-nickname").val().isEmpty() == false) {
+            connection.start().then(function () {
+                connection.invoke("Start", $("#input-nickname").val()).then(function () {
+                    app.connection = connection.connectionId;
+                }).catch(function (err) {
+                    return console.error(err.toString());
+                });
+                $("#StartModalCenter").modal("hide");
+            }).catch(function (err) {
+                return console.log(err.toString());
+            });
+        }
+        else sendErrorMessage("Por favor, ingresa un nombre válido.");
+    }
+
+
+    $("#send-button").on("click", function () {
+        sendMessage($("#chat-input").val());
+    });
+
+    $("#chat-input").on("keyup", function (event) {
+        if (event.keyCode == 13) {
+            sendMessage($("#chat-input").val());
+        }
+    })
+
+
+
+    $("#ChatSidebar").on("click", function (event) {
+        $("#chat-input").focus();
+    })
+
+    $(document).ready(function () {
+        $("#StartModalCenter").modal("show");
+    })
+
+    String.prototype.isEmpty = function () {
+        return (this.length === 0 || !this.trim());
+    };
+
+
+    function sendMessage(message) {
+        connection.invoke("SendMessage", message).catch(function (err) {
+            return console.error(err.toString());
+        });
+    }
+
+    function sendErrorMessage(message) {
+        app.modal_message = message;
+        setTimeout(function () { app.modal_message = null; }, 5000);
+    }
+
+    function showWinner(cleaner_id, nickname) {
+        app.winner = cleaner_id;
+        $("#WinnerModalCenter").modal("show");
+    }
+
+
+    var sidebarStatus = false;
+
+    /* Set the width of the sidebar to 250px and the left margin of the page content to 250px */
+    function openNav() {
+        if (!sidebarStatus) {
+            document.getElementById("ChatSidebar").style.width = "350px";
+            document.getElementById("main").style.marginLeft = "200px";
+            document.getElementById("send-message").style.marginLeft = "0px";
+            app.unread_messages = 0;
+            sidebarStatus = true;
+        }
+        else {
+            document.getElementById("ChatSidebar").style.width = "0";
+            document.getElementById("main").style.marginLeft = "0";
+            document.getElementById("send-message").style.marginLeft = "-350px";
+            sidebarStatus = false;
+        }
+
+    }
+
+</script>
