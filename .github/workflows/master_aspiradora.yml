@@ -7,6 +7,10 @@ on:
   push:
     branches:
       - master
+    paths:
+      - Aspiradora.Web/** 
+      - Aspiradora.Core/** 
+      - Aspiradora.Solution.sln
   workflow_dispatch:
 
 jobs:
