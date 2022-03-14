@@ -1,7 +1,7 @@
 {
   "cacheBootResources": true,
   "config": [
-    "appsettings.json"
+    "appsettings.Development.json"
   ],
   "debugBuild": false,
   "entryAssembly": "Aspiradora.WebAssembly",
